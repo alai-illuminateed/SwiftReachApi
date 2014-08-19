@@ -8,6 +8,7 @@
 
 namespace SwiftReachApi;
 
+use SwiftReachApi\Exceptions\SwiftReachException;
 
 class SwiftReachApi
 {
@@ -15,30 +16,13 @@ class SwiftReachApi
     private $base_url;
 
     /**
-     *
-     */
-    public function createVoiceMessage()
-    {
-
-    }
-
-    /**
-     * @summary Create an email message
-     * @return email id
-     */
-    public function createEmailMessage()
-    {
-
-    }
-
-
-
-
-    /**
      * @param mixed $base_url
      */
     public function setBaseUrl($base_url)
     {
+        if(!filter_var($base_url, FILTER_VALIDATE_URL)){
+            throw new SwiftReachException("'".$base_url."' is not a valid url.");
+        }
         $this->base_url = $base_url;
     }
 
