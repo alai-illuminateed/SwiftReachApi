@@ -12,6 +12,43 @@ namespace SwiftReachApi;
 class SwiftReachApi
 {
     private $api_key;
+    private $base_url;
+
+    /**
+     *
+     */
+    public function createVoiceMessage()
+    {
+
+    }
+
+    /**
+     * @summary Create an email message
+     * @return email id
+     */
+    public function createEmailMessage()
+    {
+
+    }
+
+
+
+
+    /**
+     * @param mixed $base_url
+     */
+    public function setBaseUrl($base_url)
+    {
+        $this->base_url = $base_url;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBaseUrl()
+    {
+        return $this->base_url;
+    }
 
     /**
      * @param mixed $api_key
