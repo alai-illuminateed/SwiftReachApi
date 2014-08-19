@@ -21,4 +21,12 @@ class SwiftReachApiTest extends \PHPUnit_Framework_TestCase {
         $swift_reach_api->setBaseUrl("test");
         $this->assertEquals("test", $swift_reach_api->getBaseUrl());
     }
+
+    public function testCreateEmailMessage()
+    {
+        $swift_reach_api = new SwiftReachApi();
+
+        $swift_reach_api->setApiKey("api_key");
+        $swift_reach_api->setBaseUrl("api.swiftreach.com");
+    }
 }
