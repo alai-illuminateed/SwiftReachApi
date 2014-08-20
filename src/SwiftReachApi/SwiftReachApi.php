@@ -1,8 +1,10 @@
 <?php
 namespace SwiftReachApi;
 
+use GuzzleHttp\Client;
 use SwiftReachApi\Exceptions\SwiftReachException;
 use SwiftReachApi\Voice\SimpleVoiceMessage;
+use SwiftReachApi\Voice\VoiceContactArray;
 
 class SwiftReachApi
 {
@@ -29,9 +31,16 @@ class SwiftReachApi
         $this->setApiKey($api_key);
         $this->setBaseUrl($base_url);
 
-        $this->guzzle_client = new \GuzzleHttp\Client();
+        $this->guzzle_client = new Client();
     }
 
+    /**
+     * Create a simple voice message on the swift reach system.
+     * @param SimpleVoiceMessage $message
+     * @return SimpleVoiceMessage Return the passed in $message with the VoiceCode set if the request was successful
+     * @throws Exceptions\SwiftReachException
+     * @throws \Exception
+     */
     public function createSimpleVoiceMessage(SimpleVoiceMessage $message)
     {
         $path = "/api/Messages/Voice/Create/Simple";
@@ -45,7 +54,8 @@ class SwiftReachApi
 
         try{
             $response = $this->post($this->getBaseUrl().$path, $message->toJson());
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             throw $e;
         }
 
@@ -53,6 +63,25 @@ class SwiftReachApi
         $message->setVoiceCode($json["VoiceCode"]);
 
         return $message;
+    }
+
+    public function sendSimpleVoiceMessageToContactArray(SimpleVoiceMessage $message, VoiceContactArray $contacts)
+    {
+        if(!$message->getVoiceCode()){
+            throw new SwiftReachException("No Voice Code was set.");
+        }
+
+        // without a matching name it won't display the caller id number
+        // when the call is made, but the call will still go through
+        if(!$message->getName()){
+            throw new SwiftReachException("The message name was not set or was blank.");
+        }
+        $url = $this->getBaseUrl()."/api/Messages/Voice/Send/".urlencode($message->getName())."/".$message->getVoiceCode();
+
+        $response = $this->post($url, $contacts->toJson());
+
+        // response body is the job id
+        return $response->getBody();
     }
 
     private function post($url, $body)

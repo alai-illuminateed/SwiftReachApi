@@ -4,6 +4,10 @@ namespace SwiftReachApi\Tests;
 
 use GuzzleHttp\Stream\Stream;
 use SwiftReachApi\SwiftReachApi;
+use SwiftReachApi\Voice\SimpleVoiceMessage;
+use SwiftReachApi\Voice\VoiceContact;
+use SwiftReachApi\Voice\VoiceContactArray;
+use SwiftReachApi\Voice\VoiceContactPhone;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Subscriber\Mock;
@@ -21,11 +25,20 @@ class SwiftReachApiTest extends \PHPUnit_Framework_TestCase {
      */
     public $svm;
 
+    /** @var  VoiceContactArray */
+    public $vca;
+
+    /** @var  VoiceContact */
+    public $contact1;
+
+    /** @var  VoiceContact */
+    public $contact2;
+
     public function setup()
     {
         $this->sra = new SwiftReachApi("api-key");
 
-        $this->svm = new \SwiftReachApi\Voice\SimpleVoiceMessage();
+        $this->svm = new SimpleVoiceMessage();
         $a = array(
             "Name"          => "API test message",
             "Description"   => "description",
@@ -39,7 +52,24 @@ class SwiftReachApiTest extends \PHPUnit_Framework_TestCase {
             ->setCallerId($a["CallerID"])
             ->setUseTTS($a["UseTTS"])
             ->setContent($a["Content"]);
+
+
+        //create contact array
+        $this->vca = new VoiceContactArray();
+
+        $this->contact1 = new VoiceContact("Test Tester");
+        $contact1_phone = new VoiceContactPhone("5555555555","home");
+        $this->contact1->setPhones(array($contact1_phone));
+
+        $this->contact2 = new VoiceContact("two phone test");
+        $contact2_phone1 = new VoiceContactPhone("5555555555","home");
+        $contact2_phone2 = new VoiceContactPhone("5555555555","home");
+        $this->contact2->setPhones(array($contact2_phone1, $contact2_phone2));
+
+        $this->vca->addContact($this->contact1)->addContact($this->contact2);
     }
+
+
 
     public function testConstructor()
     {
@@ -144,6 +174,59 @@ class SwiftReachApiTest extends \PHPUnit_Framework_TestCase {
         }
 
         $svm = $this->sra->createSimpleVoiceMessage($this->svm);
+    }
+
+    //------------------------------------------------------------------------------------------------
+
+    private function createMockForSuccessfullSimpleVoiceSending()
+    {
+        $mock = new Mock(array(
+            new Response(200, array(), Stream::factory('123456789'))
+        ));
+        $client = new Client();
+        $client->getEmitter()->attach($mock);
+        $this->sra->setGuzzleClient($client);
+    }
+
+    public function testSendCreateSimpleVoiceMessage()
+    {
+        //set up mock
+        $this->createMockForSuccessfullSimpleVoiceSending();
+
+        // add voice code from previously created voice code
+        $this->svm->setVoiceCode("123456");
+
+        $job_id = $this->sra->sendSimpleVoiceMessageToContactArray($this->svm, $this->vca);
+    }
+
+    /**
+     * @expectedException SwiftReachApi\Exceptions\SwiftReachException
+     */
+    public function testMissingVoiceCodeSendCreateSimpleVoiceMessage()
+    {
+        //set up mock
+        $this->createMockForSuccessfullSimpleVoiceSending();
+
+        $job_id = $this->sra->sendSimpleVoiceMessageToContactArray($this->svm, $this->vca);
+
+    }
+
+
+    /**
+     * @expectedException SwiftReachApi\Exceptions\SwiftReachException
+     */
+    public function testNoNameSendCreateSimpleVoiceMessage()
+    {
+        //set up mock
+        $this->createMockForSuccessfullSimpleVoiceSending();
+
+        // add voice code from previously created voice code
+        $svm = new SimpleVoiceMessage();
+
+        $svm->setVoiceCode("123456");
+
+        $job_id = $this->sra->sendSimpleVoiceMessageToContactArray($svm, $this->vca);
+
     }
 
 }

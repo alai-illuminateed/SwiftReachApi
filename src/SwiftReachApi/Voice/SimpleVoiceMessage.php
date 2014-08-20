@@ -201,6 +201,7 @@ class SimpleVoiceMessage implements JsonSerialize
         }
 
         $this->voice_code = $voice_code;
+        return $this;
     }
 
     /**
